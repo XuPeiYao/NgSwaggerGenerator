@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using CommandLine;
 
-namespace NgSwaggerServiceConvert.Model
+namespace NgSwaggerGenerator.Model
 {
     public class CliOptions
     {

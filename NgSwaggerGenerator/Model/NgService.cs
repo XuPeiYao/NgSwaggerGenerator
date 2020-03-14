@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace NgSwaggerServiceConvert.Model
+namespace NgSwaggerGenerator.Model
 {
     public class NgService
     {
@@ -41,7 +41,7 @@ namespace NgSwaggerServiceConvert.Model
 
             if (ImportTypes.Count != 0)
             {
-                builder.AppendLine($"import {{\r\n {string.Join(",\r\n", ImportTypes.Select(x => "\t" + x))}\r\n }} from '../models';\r\n");
+                builder.AppendLine($"import {{\r\n{string.Join(",\r\n", ImportTypes.Select(x => "\t" + x))}\r\n }} from '../models';\r\n");
             }
             builder.Append("@Injectable({\r\n\tprovidedIn: 'root'\r\n})\r\n");
             builder.Append($"export class {Name}Service {{\r\n\r\n");

@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 using CommandLine;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NgSwaggerServiceConvert.Extensions;
-using NgSwaggerServiceConvert.Model;
+using NgSwaggerGenerator.Extensions;
+using NgSwaggerGenerator.Model;
 using NJsonSchema;
 using NSwag;
 
-namespace NgSwaggerServiceConvert
+namespace NgSwaggerGenerator
 {
     class Program
     {
@@ -237,9 +237,14 @@ namespace NgSwaggerServiceConvert
             string indexTs = "";
             foreach (var type in types)
             {
-                System.IO.File.WriteAllText(Path.Combine(directoryPath, type.Name + ".ts"), type.ToString());
+                System.IO.File.WriteAllText(
+                    Path.Combine(directoryPath, type.Name + ".ts"),
+                    type.ToString().Replace("\t", "    ")
+                );
                 indexTs += $"export * from './{FirstCharToLower(type.Name)}';\r\n";
             }
+
+            indexTs = indexTs.Replace("\t", "    ");
 
             System.IO.File.WriteAllText(Path.Combine(directoryPath, "index.ts"), indexTs);
         }
@@ -252,9 +257,14 @@ namespace NgSwaggerServiceConvert
             string indexTs = "";
             foreach (var service in services)
             {
-                System.IO.File.WriteAllText(Path.Combine(directoryPath, FirstCharToLower(service.Name) + ".service.ts"), service.ToString());
+                System.IO.File.WriteAllText(
+                    Path.Combine(directoryPath, FirstCharToLower(service.Name) + ".service.ts"),
+                    service.ToString().Replace("\t", "    ")
+                );
                 indexTs += $"export * from './{FirstCharToLower(service.Name)}.service';\r\n";
             }
+
+            indexTs = indexTs.Replace("\t", "    ");
 
             System.IO.File.WriteAllText(Path.Combine(directoryPath, "index.ts"), indexTs);
         }
