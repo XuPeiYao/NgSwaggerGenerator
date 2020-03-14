@@ -34,17 +34,42 @@ namespace NgSwaggerServiceConvert
 
         static async Task Main(CliOptions options)
         {
+            Console.WriteLine("Start");
             await ClearOutput(options.OutputDirectory);
-            var swaggerDoc = await OpenApiDocument.FromUrlAsync(options.URL);
 
-            var types = await LoadTypes(swaggerDoc);
-            var services = await LoadServices(swaggerDoc, types);
+            try
+            {
+                Console.Write("Load Swagger JSON...\t");
+                var swaggerDoc = await OpenApiDocument.FromUrlAsync(options.URL);
+                Console.WriteLine("OK");
 
-            await OutputTypes(options, types);
-            await OutputServices(options, services);
+                Console.Write("Analysis Models...\t");
+                var types = await LoadTypes(swaggerDoc);
+                Console.WriteLine("OK");
 
-            await OutputModule(Path.Combine(options.OutputDirectory, FirstCharToLower(options.ModuleName) + ".module.ts"), options.ModuleName, services);
-            await OutputModuleIndexTs(Path.Combine(options.OutputDirectory, "index.ts"), options.ModuleName);
+                Console.Write("Analysis Services...\t");
+                var services = await LoadServices(swaggerDoc, types);
+                Console.WriteLine("OK");
+
+                Console.Write("Output Models...\t");
+                await OutputTypes(options, types);
+                Console.WriteLine("OK");
+
+                Console.Write("Output Services...\t");
+                await OutputServices(options, services);
+                Console.WriteLine("OK");
+
+                Console.Write("Output Module...\t");
+                await OutputModule(Path.Combine(options.OutputDirectory, FirstCharToLower(options.ModuleName) + ".module.ts"), options.ModuleName, services);
+                await OutputModuleIndexTs(Path.Combine(options.OutputDirectory, "index.ts"), options.ModuleName);
+                Console.WriteLine("OK");
+            }
+            catch
+            {
+                Console.WriteLine("ERROR");
+            }
+
+            Console.WriteLine("Finish");
         }
 
         static async Task OutputModuleIndexTs(string path, string moduleName)
@@ -277,7 +302,6 @@ namespace NgSwaggerServiceConvert
                             {
                                 return schema.Type.ToString().ToLower();
                             }
-                            break;
                         default:
                             return schema.Type.ToString().ToLower();
                     }
@@ -325,8 +349,6 @@ namespace NgSwaggerServiceConvert
                         return typeStr;
                     }
                 }
-
-                return "void";
             }
             catch
             {
