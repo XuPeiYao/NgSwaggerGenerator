@@ -169,24 +169,38 @@ namespace NgSwaggerGenerator
                     newMethod.Description = path.Value[method].Description ?? path.Value[method].Summary;
                     newMethod.Method = method;
                     newMethod.Name = string.Join("_", path.Value[method].OperationId.Split("_").Skip(1));
+
+                    if (string.IsNullOrWhiteSpace(newMethod.Name))
+                    {
+                        newMethod.Name = path.Value[method].OperationId;
+                    }
+
                     newMethod.Url = path.Key;
 
-                    if (path.Value[method].Responses["200"].Schema != null)
+                    if (path.Value[method].Responses.ContainsKey("200"))
                     {
-                        newMethod.ReturnType = GetTypeString(swaggerDoc, path.Value[method].Responses["200"].Schema);
+                        if (path.Value[method].Responses["200"].Schema != null)
+                        {
+                            newMethod.ReturnType = GetTypeString(swaggerDoc, path.Value[method].Responses["200"].Schema);
+                        }
+                        else
+                        {
+                            newMethod.ReturnType = "void";
+                        }
+
+                        if (newMethod.ReturnType == "file")
+                        {
+                            newMethod.ReturnType = "void";
+                        }
                     }
                     else
                     {
-                        newMethod.ReturnType = "void";
-                    }
-
-                    if (newMethod.ReturnType == "file")
-                    {
-                        newMethod.ReturnType = "void";
+                        newMethod.ReturnType = "any";
                     }
 
                     newMethod.Tag = path.Value[method].Tags.FirstOrDefault() ?? "Unknown";
-                    newMethod.IsFormData = path.Value[method].Consumes?.Contains("multipart/form-data") ?? false;
+                    var consumes = path.Value[method].Consumes ?? new List<string>();
+                    newMethod.IsFormData = consumes.Contains("multipart/form-data") || consumes.Contains("application/x-www-form-urlencoded");
 
                     foreach (var param in path.Value[method].Parameters)
                     {
