@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NSwag;
 
-namespace NgSwaggerServiceConvert.Model
+namespace NgSwaggerGenerator.Model
 {
     public class NgParameter
     {

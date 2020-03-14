@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace NgSwaggerServiceConvert.Model
+namespace NgSwaggerGenerator.Model
 {
     public class NgMethod
     {

@@ -11,6 +11,10 @@
 	<Company>XPY.NgSwagger</Company>
 	<Product>XPY.NgSwagger</Product>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<Version>1.0.1</Version>
+	<AssemblyName>XPY.NgSwaggerGenerator</AssemblyName>
+	<RootNamespace>NgSwaggerGenerator</RootNamespace>
+	<StartupObject></StartupObject>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
