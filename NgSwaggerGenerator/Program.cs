@@ -95,7 +95,7 @@ namespace NgSwaggerGenerator
             builder.AppendLine("import { NgModule } from '@angular/core';");
             builder.AppendLine("import { CommonModule } from '@angular/common';");
             builder.AppendLine("import { HttpClientModule } from '@angular/common/http';");
-            builder.AppendLine($"import {{\r\n{string.Join(",\r\n", services.Select(x => "\t" + x.Name + "Service"))}\r\n}} from './services';\r\n");
+            builder.AppendLine($"import {{\r\n{string.Join(",\r\n", services.Select(x => "\t" + x.Name + "Service"))}\r\n}} from './services';");
 
             List<string> resolves = new List<string>();
 
@@ -104,7 +104,7 @@ namespace NgSwaggerGenerator
                 resolves = services.SelectMany(x => x.Methods.Select(y => x.Name + y.Name + "Resolve")).ToList();
 
                 var resolvesImport = string.Join(",\r\n", resolves.Select(x => "\t" + x));
-                builder.AppendLine($"import {{\r\n{resolvesImport}\r\n}} from './resolves';\r\n");
+                builder.AppendLine($"import {{\r\n{resolvesImport}\r\n}} from './resolves';");
             }
 
             builder.AppendLine();
