@@ -59,7 +59,7 @@ namespace NgSwaggerGenerator.Model
             builder.Append($"export interface {Name}");
             if (Extends.Count != 0)
             {
-                builder.Append(" extends " + string.Join(", ", ImportTypes));
+                builder.Append(" extends " + string.Join(", ", Extends.Where(x => x != null)));
             }
             builder.Append(" {\r\n\r\n");
 
