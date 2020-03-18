@@ -70,7 +70,7 @@ namespace NgSwaggerGenerator.Model
 
             builder.AppendLine("}");
 
-            var result = builder.ToString().Replace("\t", "    ");
+            var result = builder.ToString().Replace("\t", "  ");
             Regex regex = new Regex(@"[ ]+\r\n");
             result = regex.Replace(result, "\r\n");
 
