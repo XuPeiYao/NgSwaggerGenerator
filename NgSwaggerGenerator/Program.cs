@@ -417,6 +417,11 @@ namespace NgSwaggerGenerator
                                 typeStr = "(" + typeStr + ") | " + string.Join(" & ", schema.AllOf.Select(x => GetTypeString(doc, x)));
                             }
                         }
+                        if (doc.Definitions.Any(x => x.Value == schema))
+                        {
+                            typeStr = doc.Definitions.FirstOrDefault(x => x.Value == schema).Key;
+                        }
+
                         return typeStr;
                     }
                 }
