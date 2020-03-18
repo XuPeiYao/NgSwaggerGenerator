@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CommandLine;
 using Newtonsoft.Json;
@@ -60,8 +61,8 @@ namespace NgSwaggerGenerator
                 Console.WriteLine("OK");
 
                 Console.Write("Output Module...\t");
-                await OutputModule(Path.Combine(options.OutputDirectory, FirstCharToLower(options.ModuleName) + ".module.ts"), options.ModuleName, services);
-                await OutputModuleIndexTs(Path.Combine(options.OutputDirectory, "index.ts"), options.ModuleName);
+                await OutputModule(options, Path.Combine(options.OutputDirectory, FirstCharToLower(options.ModuleName) + ".module.ts"), options.ModuleName, services);
+                await OutputModuleIndexTs(options, Path.Combine(options.OutputDirectory, "index.ts"), options.ModuleName);
                 Console.WriteLine("OK");
             }
             catch
@@ -72,36 +73,57 @@ namespace NgSwaggerGenerator
             Console.WriteLine("Finish");
         }
 
-        static async Task OutputModuleIndexTs(string path, string moduleName)
+        static async Task OutputModuleIndexTs(CliOptions options, string path, string moduleName)
         {
             var builder = new StringBuilder();
             builder.AppendLine("export * from './models';");
             builder.AppendLine("export * from './services';");
+
+            if (options.Resolve)
+            {
+                builder.AppendLine("export * from './resolves';");
+            }
+
             builder.AppendLine($"export * from './{FirstCharToLower(moduleName)}.module';");
 
             System.IO.File.WriteAllText(path, builder.ToString());
         }
 
-        static async Task OutputModule(string path, string moduleName, List<NgService> services)
+        static async Task OutputModule(CliOptions options, string path, string moduleName, List<NgService> services)
         {
             var builder = new StringBuilder();
             builder.AppendLine("import { NgModule } from '@angular/core';");
             builder.AppendLine("import { CommonModule } from '@angular/common';");
             builder.AppendLine("import { HttpClientModule } from '@angular/common/http';");
-            builder.AppendLine($"import {{\r\n {string.Join(",\r\n", services.Select(x => "\t" + x.Name + "Service"))}\r\n }} from './';\r\n");
+            builder.AppendLine($"import {{\r\n{string.Join(",\r\n", services.Select(x => "\t" + x.Name + "Service"))}\r\n}} from './services';\r\n");
+
+            List<string> resolves = new List<string>();
+
+            if (options.Resolve)
+            {
+                resolves = services.SelectMany(x => x.Methods.Select(y => x.Name + y.Name + "Resolve")).ToList();
+
+                var resolvesImport = string.Join(",\r\n", resolves.Select(x => "\t" + x));
+                builder.AppendLine($"import {{\r\n{resolvesImport}\r\n}} from './resolves';\r\n");
+            }
+
             builder.AppendLine();
 
             builder.AppendLine("@NgModule({");
             builder.AppendLine("\tdeclarations: [],");
             builder.AppendLine("\timports: [CommonModule, HttpClientModule],");
             builder.AppendLine("\tproviders: [");
-            builder.Append(string.Join(",\r\n", services.Select(x => "\t\t" + x.Name + "Service")) + "\r\n");
+            builder.Append(string.Join(",\r\n", services.Select(x => x.Name + "Service").Concat(resolves).Select(x => "\t\t" + x)) + "\r\n");
             builder.AppendLine("\t]");
             builder.AppendLine("})");
             builder.AppendLine($"export class {moduleName}Module {{");
             builder.AppendLine("}");
 
-            System.IO.File.WriteAllText(path, builder.ToString());
+            var result = builder.ToString().Replace("\t", "  ");
+            Regex regex = new Regex(@"[ ]+\r\n");
+            result = regex.Replace(result, "\r\n");
+
+            System.IO.File.WriteAllText(path, result);
         }
 
         static async Task<List<NgType>> LoadTypes(OpenApiDocument swaggerDoc)
@@ -253,12 +275,12 @@ namespace NgSwaggerGenerator
             {
                 System.IO.File.WriteAllText(
                     Path.Combine(directoryPath, type.Name + ".ts"),
-                    type.ToString().Replace("\t", "    ")
+                    type.ToString()
                 );
                 indexTs += $"export * from './{FirstCharToLower(type.Name)}';\r\n";
             }
 
-            indexTs = indexTs.Replace("\t", "    ");
+            indexTs = indexTs.Replace("\t", "  ");
 
             System.IO.File.WriteAllText(Path.Combine(directoryPath, "index.ts"), indexTs);
         }
@@ -273,14 +295,39 @@ namespace NgSwaggerGenerator
             {
                 System.IO.File.WriteAllText(
                     Path.Combine(directoryPath, FirstCharToLower(service.Name) + ".service.ts"),
-                    service.ToString().Replace("\t", "    ")
+                    service.ToString()
                 );
                 indexTs += $"export * from './{FirstCharToLower(service.Name)}.service';\r\n";
             }
 
-            indexTs = indexTs.Replace("\t", "    ");
+            indexTs = indexTs.Replace("\t", "  ");
 
             System.IO.File.WriteAllText(Path.Combine(directoryPath, "index.ts"), indexTs);
+
+            if (!options.Resolve)
+            {
+                return;
+            }
+
+            var resolvePath = Path.Combine(options.OutputDirectory, "resolves");
+            Directory.CreateDirectory(resolvePath);
+
+            string resolveIndexTs = "";
+            foreach (var service in services)
+            {
+                foreach (var method in service.Methods)
+                {
+                    System.IO.File.WriteAllText(
+                        Path.Combine(resolvePath, FirstCharToLower(service.Name) + method.Name + "Resolve.ts"),
+                        method.ToResolve(service.Name)
+                    );
+                    resolveIndexTs += $"export * from './{FirstCharToLower(service.Name)}{method.Name}Resolve';\r\n";
+                }
+            }
+
+            resolveIndexTs = resolveIndexTs.Replace("\t", "  ");
+
+            System.IO.File.WriteAllText(Path.Combine(resolvePath, "index.ts"), resolveIndexTs);
         }
 
         public static string FirstCharToLower(string s)

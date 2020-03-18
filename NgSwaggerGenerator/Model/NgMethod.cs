@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace NgSwaggerGenerator.Model
 {
@@ -33,7 +34,7 @@ namespace NgSwaggerGenerator.Model
                     }
                     foreach (var parameter in Parameters)
                     {
-                        builder.AppendLine($" * @param {parameter.Name} {parameter.Description}");
+                        builder.AppendLine($" * @param {parameter.Name} {parameter.Description ?? parameter.Name}");
                     }
                 }
 
@@ -49,7 +50,14 @@ namespace NgSwaggerGenerator.Model
             }
             builder.AppendLine($"): Observable<{ReturnType}> {{");
 
-            builder.AppendLine($"\tlet url = '{Url}';");
+            if (Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.Path) || Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.Query))
+            {
+                builder.AppendLine($"\tlet url = '{Url}';");
+            }
+            else
+            {
+                builder.AppendLine($"\tconst url = '{Url}';");
+            }
 
             #region PATH
             if (Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.Path))
@@ -95,8 +103,8 @@ namespace NgSwaggerGenerator.Model
                 }
 
                 builder.AppendLine("\t// Append URL");
-                builder.AppendLine("\tif( queryList.length > 0 ) {");
-                builder.AppendLine("\t\turl += '?'+ queryList.join('&');");
+                builder.AppendLine("\tif ( queryList.length > 0 ) {");
+                builder.AppendLine("\t\turl += '?' + queryList.join('&');");
                 builder.AppendLine("\t}");
             }
             #endregion
@@ -145,6 +153,14 @@ namespace NgSwaggerGenerator.Model
                     builder.AppendLine("\t);");
                 }
             }
+            else if (
+                (Method == "post" || Method == "put") &&
+                !Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.Body))
+            {
+                builder.AppendLine(",");
+                builder.AppendLine("\t\tnull");
+                builder.Append("\r\n\t);\r\n");
+            }
             else
             {
                 builder.Append("\r\n\t);\r\n");
@@ -156,5 +172,54 @@ namespace NgSwaggerGenerator.Model
             return builder.ToString();
         }
 
+        public string ToResolve(string serviceName)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine("﻿import { Injectable } from '@angular/core';");
+            builder.AppendLine("import {");
+            builder.AppendLine("\tResolve,");
+            builder.AppendLine("\tRouterStateSnapshot,");
+            builder.AppendLine("\tActivatedRouteSnapshot");
+            builder.AppendLine("} from '@angular/router';");
+            builder.AppendLine($"import {{ {serviceName}Service }} from '../services';");
+            builder.AppendLine();
+            builder.Append("@Injectable({\r\n\tprovidedIn: 'root'\r\n})\r\n");
+            builder.AppendLine($"export class {serviceName}{Name}Resolve implements Resolve<any> {{");
+            builder.AppendLine();
+
+            var serviceVarFullName = Program.FirstCharToLower(serviceName) + "Service";
+
+            builder.AppendLine($"\tconstructor(private {serviceVarFullName}: {serviceName}Service) {{");
+            builder.AppendLine("\t}");
+            builder.AppendLine();
+            builder.AppendLine("\tresolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {");
+
+            builder.Append($"\t\treturn this.{serviceVarFullName}.{Program.FirstCharToLower(Name)}(");
+
+            if (Parameters.Count != 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine(
+                    string.Join(
+                        ",\r\n",
+                        Parameters.Select(x => $"\t\t\troute.data.{x.Name} || route.params.{x.Name} || route.queryParams.{x.Name}")
+                    )
+                );
+                builder.AppendLine("\t\t);");
+            }
+            else
+            {
+                builder.AppendLine(");");
+            }
+
+            builder.AppendLine("\t}");
+            builder.AppendLine("}");
+
+            var result = builder.ToString().Replace("\t", "  ");
+            Regex regex = new Regex(@"[ ]+\r\n");
+            result = regex.Replace(result, "\r\n");
+
+            return result;
+        }
     }
 }
