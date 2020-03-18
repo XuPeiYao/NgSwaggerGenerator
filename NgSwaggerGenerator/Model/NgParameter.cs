@@ -25,7 +25,7 @@ namespace NgSwaggerGenerator.Model
             {
                 builder.Append("?");
             }
-            builder.Append(" : ");
+            builder.Append(": ");
 
             builder.Append(Type);
 

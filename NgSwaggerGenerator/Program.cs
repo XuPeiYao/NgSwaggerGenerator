@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CommandLine;
 using Newtonsoft.Json;
@@ -101,7 +102,11 @@ namespace NgSwaggerGenerator
             builder.AppendLine($"export class {moduleName}Module {{");
             builder.AppendLine("}");
 
-            System.IO.File.WriteAllText(path, builder.ToString());
+            var result = builder.ToString().Replace("\t", "    ");
+            Regex regex = new Regex(@"\s+\r\n");
+            result = regex.Replace(result, "\r\n");
+
+            System.IO.File.WriteAllText(path, result);
         }
 
         static async Task<List<NgType>> LoadTypes(OpenApiDocument swaggerDoc)
@@ -253,7 +258,7 @@ namespace NgSwaggerGenerator
             {
                 System.IO.File.WriteAllText(
                     Path.Combine(directoryPath, type.Name + ".ts"),
-                    type.ToString().Replace("\t", "    ")
+                    type.ToString()
                 );
                 indexTs += $"export * from './{FirstCharToLower(type.Name)}';\r\n";
             }
@@ -273,7 +278,7 @@ namespace NgSwaggerGenerator
             {
                 System.IO.File.WriteAllText(
                     Path.Combine(directoryPath, FirstCharToLower(service.Name) + ".service.ts"),
-                    service.ToString().Replace("\t", "    ")
+                    service.ToString()
                 );
                 indexTs += $"export * from './{FirstCharToLower(service.Name)}.service';\r\n";
             }

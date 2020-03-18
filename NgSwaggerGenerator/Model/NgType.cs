@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace NgSwaggerGenerator.Model
 {
@@ -48,6 +49,8 @@ namespace NgSwaggerGenerator.Model
                 //builder.AppendLine($"import {{\r\n {string.Join(",\r\n", ImportTypes.Select(x => "\t" + x))}\r\n }} from './index';\r\n");
             }
 
+            builder.AppendLine();
+
             if (Description != null)
             {
                 builder.AppendLine($"/**\r\n{string.Join("\r\n", Description.Split("\r\n").Select(x => " * " + x))}\r\n */");
@@ -67,7 +70,11 @@ namespace NgSwaggerGenerator.Model
 
             builder.AppendLine("}");
 
-            return builder.ToString();
+            var result = builder.ToString().Replace("\t", "    ");
+            Regex regex = new Regex(@"[ ]+\r\n");
+            result = regex.Replace(result, "\r\n");
+
+            return result;
         }
     }
 }

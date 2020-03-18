@@ -33,7 +33,7 @@ namespace NgSwaggerGenerator.Model
                     }
                     foreach (var parameter in Parameters)
                     {
-                        builder.AppendLine($" * @param {parameter.Name} {parameter.Description}");
+                        builder.AppendLine($" * @param {parameter.Name} {parameter.Description ?? parameter.Name}");
                     }
                 }
 
@@ -49,7 +49,14 @@ namespace NgSwaggerGenerator.Model
             }
             builder.AppendLine($"): Observable<{ReturnType}> {{");
 
-            builder.AppendLine($"\tlet url = '{Url}';");
+            if (Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.Path) || Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.Query))
+            {
+                builder.AppendLine($"\tlet url = '{Url}';");
+            }
+            else
+            {
+                builder.AppendLine($"\tconst url = '{Url}';");
+            }
 
             #region PATH
             if (Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.Path))
@@ -95,8 +102,8 @@ namespace NgSwaggerGenerator.Model
                 }
 
                 builder.AppendLine("\t// Append URL");
-                builder.AppendLine("\tif( queryList.length > 0 ) {");
-                builder.AppendLine("\t\turl += '?'+ queryList.join('&');");
+                builder.AppendLine("\tif ( queryList.length > 0 ) {");
+                builder.AppendLine("\t\turl += '?' + queryList.join('&');");
                 builder.AppendLine("\t}");
             }
             #endregion
@@ -145,6 +152,14 @@ namespace NgSwaggerGenerator.Model
                     builder.AppendLine("\t);");
                 }
             }
+            else if (
+                (Method == "post" || Method == "put") &&
+                !Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.Body))
+            {
+                builder.AppendLine(",");
+                builder.AppendLine("\t\tnull");
+                builder.Append("\r\n\t);\r\n");
+            }
             else
             {
                 builder.Append("\r\n\t);\r\n");
@@ -155,6 +170,5 @@ namespace NgSwaggerGenerator.Model
             builder.AppendLine("}");
             return builder.ToString();
         }
-
     }
 }
