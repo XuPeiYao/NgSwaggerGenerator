@@ -10,7 +10,6 @@ namespace NgSwaggerGenerator.Model
         internal string Tag { get; set; }
         public string Method { get; set; }
         public string Url { get; set; }
-        public bool IsFormData { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string ReturnType { get; set; }
@@ -141,7 +140,7 @@ namespace NgSwaggerGenerator.Model
             if (Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.Body) || Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.FormData))
             {
                 builder.AppendLine(",");
-                if (IsFormData)
+                if (Parameters.Any(x => x.Kind == NSwag.OpenApiParameterKind.FormData))
                 {
                     builder.AppendLine("\t\tformData");
                     builder.AppendLine("\t);");
