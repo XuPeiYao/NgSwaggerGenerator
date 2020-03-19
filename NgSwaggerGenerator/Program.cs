@@ -33,6 +33,7 @@ namespace NgSwaggerGenerator
             }
         }
 
+        static SchemaType SchemaType { get; set; }
         static async Task Main(CliOptions options)
         {
             Console.WriteLine("Start");
@@ -43,6 +44,19 @@ namespace NgSwaggerGenerator
                 Console.Write("Load Swagger JSON...\t");
                 var swaggerDoc = await OpenApiDocument.FromUrlAsync(options.URL);
                 Console.WriteLine("OK");
+
+                switch (SchemaType = swaggerDoc.SchemaType)
+                {
+                    case SchemaType.Swagger2:
+                        Console.WriteLine("SchemaType: Swagger2");
+                        break;
+                    case SchemaType.OpenApi3:
+                        Console.WriteLine("SchemaType: OpenApi3");
+                        break;
+                    default:
+                        Console.WriteLine("SchemaType: Unsupported");
+                        break;
+                }
 
                 Console.Write("Analysis Models...\t");
                 var types = await LoadTypes(swaggerDoc);
@@ -222,7 +236,6 @@ namespace NgSwaggerGenerator
 
                     newMethod.Tag = path.Value[method].Tags.FirstOrDefault() ?? "Unknown";
                     var consumes = path.Value[method].Consumes ?? new List<string>();
-                    newMethod.IsFormData = consumes.Contains("multipart/form-data") || consumes.Contains("application/x-www-form-urlencoded");
 
                     foreach (var param in path.Value[method].Parameters)
                     {
