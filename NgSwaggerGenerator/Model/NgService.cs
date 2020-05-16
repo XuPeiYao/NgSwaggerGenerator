@@ -14,7 +14,7 @@ namespace NgSwaggerGenerator.Model
 
         public List<string> ImportTypes {
             get {
-                var allTypes = Methods.SelectMany(x => x.Parameters.Select(x => x.Type).Concat(new string[] { x.ReturnType }));
+                var allTypes = Methods.SelectMany(x => x.Parameters.Select(y => y.Type).Concat(new string[] { x.ReturnType }));
 
                 return
                     string.Join(" ", allTypes)

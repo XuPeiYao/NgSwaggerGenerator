@@ -20,7 +20,8 @@ namespace NgSwaggerGenerator
     {
         static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<CliOptions>(args).WithParsed(options => {
+            Parser.Default.ParseArguments<CliOptions>(args).WithParsed(options =>
+            {
                 Main(options).GetAwaiter().GetResult();
             });
         }
@@ -433,6 +434,10 @@ namespace NgSwaggerGenerator
                         if (doc.Definitions.Any(x => x.Value == schema))
                         {
                             typeStr = doc.Definitions.FirstOrDefault(x => x.Value == schema).Key;
+                        }
+                        if (typeStr == null)
+                        {
+                            return "any";
                         }
 
                         return typeStr;
