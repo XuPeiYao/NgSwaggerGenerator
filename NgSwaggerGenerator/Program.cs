@@ -287,11 +287,15 @@ namespace NgSwaggerGenerator
             string indexTs = "";
             foreach (var type in types)
             {
+                if (type.Name == "JsonElement" || type.Name == "JsonValueKind")
+                {
+                    continue;
+                }
                 System.IO.File.WriteAllText(
                     Path.Combine(directoryPath, type.Name + ".ts"),
                     type.ToString()
                 );
-                indexTs += $"export * from './{FirstCharToLower(type.Name)}';\r\n";
+                indexTs += $"export * from './{type.Name}';\r\n";
             }
 
             indexTs = indexTs.Replace("\t", "  ");
@@ -381,7 +385,13 @@ namespace NgSwaggerGenerator
                             if (doc.Definitions.Any(x => x.Value == schema))
                             {
                                 var refDef = doc.Definitions.SingleOrDefault(x => x.Value == schema);
-                                return refDef.Key;
+                                var type = refDef.Key;
+
+                                if (type == "JsonElement" || type == "JsonValueKind")
+                                {
+                                    return "any";
+                                }
+                                return type;
                             }
                             else
                             {
@@ -396,7 +406,14 @@ namespace NgSwaggerGenerator
                     if (schema.Reference != null)
                     {
                         var typeName = doc.Definitions.SingleOrDefault(x => x.Value == schema.Reference);
-                        return typeName.Key;
+
+                        var type = typeName.Key;
+                        if (type == "JsonElement" || type == "JsonValueKind")
+                        {
+                            return "any";
+                        }
+
+                        return type;
                     }
                     else if (schema is OpenApiParameter parameterSchema)
                     {
